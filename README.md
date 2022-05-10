@@ -3,22 +3,22 @@ This repository contains all materials for the paper "Stop, children what's that
 
 ## Repository structure
 
-.
+.  
 ├── code  
 │   ├── R
-│   │   ├── cache
-│   │   └── data
-├── data
-├── docs
-├── figures
-│   ├── ground truth
-│   └── plots
-└── images
-    ├── stimuli
-	    ├── pilot
-    	├── study
-			├── practice
-			├── test
+│   │   ├── cache  
+│   │   └── data  
+├── data  
+├── docs  
+├── figures  
+│   ├── ground truth  
+│   └── plots  
+└── images   
+	└── stimuli    
+		├── pilot    
+    		└── study    
+			├── practice  
+			└── test  
 
 ## code
 

@@ -34,7 +34,7 @@ Raw data files of the experiment reported in the paper.
 
 ### plots
 
-Plots of the figures included in the paper
+Results plots as shown in the paper.
 
 ## Images
 

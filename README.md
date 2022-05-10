@@ -22,11 +22,11 @@ This repository contains all materials for the paper "Stop, children what's that
 
 ### R
 
-Analysis and plotting script. You can view a rendered html file of the analysis [here]()
+Analysis and plotting script. You can view a rendered html file of the analysis [here](https://cicl-stanford.github.io/whats-that-sound/)
 
 ## data
 
-Raw data files of the experiment reported in the paper (3 pseudo-random ordered conditions)
+Raw data files of the experiment reported in the paper.
 
 ## figures
 

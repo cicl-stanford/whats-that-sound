@@ -1,5 +1,5 @@
 # Stop, children what's that sound? Multi-modal inference through mental simulation
-This repository contains all materials for the paper "Stop, children what's that sound? Multi-modal inference through mental simulation" by Joseph Outa, Xi Jia Zhou, Hyowon Gweon and Tobias Gerstenberg. If you have any questions about this repository, please feel free to email me at [joouta@stanford.edu](joouta@stanford.edu)
+This repository contains all materials for the paper "Stop, children what's that sound? Multi-modal inference through mental simulation" by Joseph Outa, Xi Jia Zhou, Hyowon Gweon and Tobias Gerstenberg. If you have any questions about this repository, please feel free to email me at [joouta@stanford.edu](mailto:joouta@stanford.edu)
 
 ## Repository structure
 ```bash

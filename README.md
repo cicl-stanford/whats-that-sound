@@ -41,7 +41,7 @@ Results plots as shown in the paper.
 
 Stimuli images used to generate results plots.
 
-(file order doesn't match path on script line 414 - check)
+(NB: file order on images/ here doesn't match path used on script line 414 - check)
 
 
 

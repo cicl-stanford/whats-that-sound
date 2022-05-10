@@ -9,7 +9,6 @@ This repository contains all materials for the paper "Stop, children what's that
 │       ├── cache
 │       └── data
 ├── data
-├── docs
 ├── figures
 │   ├── ground_truth
 │   └── plots
@@ -17,6 +16,7 @@ This repository contains all materials for the paper "Stop, children what's that
     └── stimuli
         ├── pilot
         └── study
+
 
 ## code
 

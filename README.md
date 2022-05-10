@@ -5,13 +5,14 @@ This repository contains all materials for the paper "Stop, children what's that
 
 .
 ├── code
-│   └── R
-│       ├── cache
-│       └── data
+│   └── R
+│       ├── cache
+│       └── data
 ├── data
+├── docs
 ├── figures
-│   ├── ground_truth
-│   └── plots
+│   ├── ground_truth
+│   └── plots
 └── images
     └── stimuli
         ├── pilot

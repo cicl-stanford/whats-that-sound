@@ -1,0 +1,1086 @@
+---
+title: "Plinko Online Analysis"
+author: "Tobias Gerstenberg, Joseph Outa, Xi Jia Zhou"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+---
+
+# SETUP
+
+## Load libraries
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library("readxl")     # for reading excel files 
+library("png")        # for adding images to ggplot 
+library("egg")        # for geom_custom()
+library("grid")       # functions for dealing with images 
+library("ggpubr")     # for plotting
+library("knitr")      # for knitting
+library("janitor")    # for cleaning column names 
+library("transport")  # for computing Wasserstein distance
+library("kableExtra") # for knitr tables
+library("xtable")     # for latex tables
+library("patchwork")  # for figure panels
+library("corrr")      # for correlations
+library("brms")       # for Bayesian data analysis
+library("tidyverse")  # for wrangling and plotting 
+```
+
+## Set options
+
+```{r, echo=FALSE}
+theme_set(theme_classic() + 
+    theme(text = element_text(size = 24)))
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+
+options(dplyr.summarise.inform = F)
+
+# function for printing out html or latex tables 
+print_table = function(data, format = "html", digits = 2){
+  if(format == "html"){
+    data %>% 
+      kable(digits = digits) %>% 
+      kable_styling()
+  }else if(format == "latex"){
+    data %>% 
+      xtable(digits = digits) %>%
+      print(include.rownames = F,
+            booktabs = T)
+  }
+}
+```
+
+# DATA 
+
+## Load and structure data
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# trial information from the adult plinko eye-tracking experiment 
+load("data/selection.RData")
+
+# posterior distributions for the different models 
+load("data/posterior.RData")
+
+# load data from adult participants 
+load("data/judgments.RData")
+
+# raw data 
+df.data = read_excel(path = "../../data/plinko_online_experiment.xlsx",
+                     sheet = "sheet1") %>% 
+  clean_names() %>% 
+  filter(exclude == "no") %>% 
+  mutate(participant = 1:n()) %>% 
+  relocate(participant)
+    
+# demographics 
+df.demographics = df.data %>% 
+  select(participant, child_id, age, gender, race, condition,
+         sound_familiarization, practice_drops)
+
+# participants' choices 
+df.choices = df.data %>% 
+  select(participant, age, condition, contains("resp")) %>% 
+  pivot_longer(cols = starts_with("resp"),
+               names_to = "trial",
+               values_to = "answer") %>% 
+  mutate(answer = case_when(answer == "green" ~ "3",
+                            answer == "yellow" ~ "2",
+                            answer == "blue" ~ "1")) %>% 
+  mutate(trial = as.numeric(str_remove(trial, "resp_trial"))) %>% 
+  left_join(read_csv("../../data/plinko_online_experiment_counterbalance.csv",
+                     show_col_types = FALSE),
+            by = c("condition", "trial")) %>% 
+  mutate(across(c("condition", "answer", "world"),
+                ~ as.numeric(.)))
+
+df.choices = df.choices %>% 
+  left_join(df.judgments %>% 
+              rename(world = trial,
+                     ground_truth = hole) %>% 
+              filter(world %in% df.choices$world) %>% 
+              distinct(world, ground_truth),
+            by = "world") %>% 
+  mutate(correct = ifelse(answer == ground_truth, 1, 0)) %>% 
+  na.omit()
+```
+
+## Add model predictions 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# x positions of the holes
+hole_positions = c(151.229172, 300, 448.770844)
+
+df.model = df.choices %>% 
+  distinct(world) %>% 
+  left_join(df.selection %>% 
+              select(world, hole, x),
+            by = "world") %>% 
+  left_join(df.posterior %>% 
+              select(world, hole, contains("_loss"), contains("entropy")),
+            by = c("world", "hole")) %>% 
+  rename_with(.fn = ~ str_remove(., "loss_")) %>% 
+  rename_with(.fn = ~ str_replace(., "combined", "both")) %>% 
+  mutate(across(contains("hole"), .fns = ~ . * 100),
+         world_order = rank(entropy_both,
+                            ties.method = "first")) %>% 
+  select(world, world_order, contains("hole"),
+         entropy_vision, entropy_sound, entropy_both, -hole) %>% 
+  arrange(world_order)
+
+# fit parameter for matching model
+fun_fit_matching_sd = function(sd_matching){
+    df.choices %>% 
+        left_join(df.selection %>% 
+                      select(world, x),
+                  by = "world") %>% 
+        mutate(matching = dnorm(x - hole_positions,
+                                sd = sd_matching,
+                                log = T)) %>% 
+        summarize(likelihood = -sum(matching)) %>% 
+        pull(likelihood)
+}
+
+sd_optimal = optim(par = 1,
+                   fn = fun_fit_matching_sd)
+
+df.predictions = df.model %>% 
+  pivot_longer(cols = contains("hole"),
+               names_to = c("answer", "model"),
+               names_sep = "_",
+               values_to = "prediction") %>% 
+  mutate(answer = str_remove(answer, "hole"),
+         answer = factor(answer, levels = 1:3),
+         prediction = prediction / 100) %>% 
+  pivot_wider(names_from = model,
+              values_from = prediction) %>% 
+  mutate(baseline = 1/3) %>% 
+  left_join(df.selection %>% 
+              select(world, x),
+            by = "world") %>% 
+  group_by(world) %>% 
+  mutate(matching = dnorm(x - hole_positions, sd = sd_optimal$par),
+         matching = matching / sum(matching)) %>% 
+  select(-x)
+
+# add adult means to model predictions 
+df.adults = df.choices %>% 
+  distinct(world) %>% 
+  left_join(df.judgments %>% 
+              rename(world = trial) %>% 
+              select(experiment,
+                     world,
+                     participant,
+                     answer = response,
+                     ground_truth = hole),
+            by = "world")
+
+df.predictions = df.predictions %>% 
+  left_join(df.adults %>% 
+              mutate(answer = factor(answer, levels = 1:3)) %>% 
+              count(experiment, world, answer,
+                    .drop = F) %>% 
+              group_by(experiment, world) %>% 
+              mutate(p = n / sum(n),
+                     experiment = str_c("adult_", experiment)) %>% 
+              ungroup() %>% 
+              select(-n) %>% 
+              pivot_wider(names_from = experiment, 
+                          values_from = p),
+            by = c("world", "answer")) %>% 
+  ungroup()
+
+```
+
+# STATS 
+
+## Trial selection 
+
+```{r, echo=FALSE, eval=FALSE}
+hole_positions = c(151.229172, 300, 448.770844)
+
+selection = c(91, 31, 32, 94, 35, 149, 62, 143, 19)
+
+df.trial_selection  = df.judgments %>% 
+  mutate(response = factor(response, levels = 1:3)) %>% 
+  count(experiment, trial, hole, response, .drop = F) %>% 
+  pivot_wider(names_from = experiment, 
+              values_from = n) %>% 
+  group_by(trial, hole) %>% 
+  mutate(vision_max = which.max(vision),
+         vision_sound_max = which.max(vision_sound)) %>% 
+  group_by(trial, hole, vision_max, vision_sound_max) %>% 
+  mutate(across(c(vision, vision_sound), ~ . / sum(.))) %>% 
+  summarize(distance = wasserstein1d(vision, vision_sound, p = 2)) %>% 
+  arrange(desc(distance)) %>% 
+  left_join(df.selection %>% 
+              select(trial = world, x, ncollisions) %>% 
+              rowwise() %>% 
+              mutate(matching_max = which.min(abs(x - hole_positions))),
+            by = "trial") %>% 
+  relocate(matching_max, .after = vision_sound_max) %>% 
+  ungroup() %>% 
+  rowwise() %>% 
+  mutate(n_different = length(unique(c_across(contains("_max")))))
+
+df.trial_selection %>%   
+  filter(trial %in% selection) %>% 
+  select(-x) %>% 
+  print_table()
+```
+
+## Fit separate models to each participant 
+
+### Children
+
+```{r}
+# adult data 
+# model_selection = c("adult_vision", "adult_vision_sound", "baseline", "matching")
+
+# computational models 
+model_selection = c("vision", "both", "baseline", "matching")
+
+df.fits = df.choices %>% 
+  mutate(answer = factor(answer, levels = 1:3)) %>% 
+  left_join(df.predictions %>% 
+              select(world, answer, all_of(model_selection)),
+            by = c("world", "answer")) %>% 
+  mutate(across(all_of(model_selection), ~ ifelse(. == 0, 0.01, .))) %>% 
+  group_by(age, participant) %>% 
+  summarize(across(all_of(model_selection), ~ exp(sum(log(.))))) %>% 
+  ungroup() %>% 
+  rowwise() %>% 
+  mutate(sum = sum(c_across(all_of(model_selection))),
+         across(all_of(model_selection), ~ . / sum)) %>% 
+  select(-sum)
+```
+
+### Adults 
+
+- maybe the matching model should be fit separately for adults (and for the selection of trials?!)
+
+```{r}
+# model_selection = c("adult_vision", "adult_vision_sound", "baseline", "matching")
+
+# computational models 
+model_selection = c("vision", "both", "baseline", "matching")
+
+df.fits.adults = df.adults %>% 
+    mutate(answer = as.factor(answer)) %>% 
+    filter(world %in% unique(df.choices$world)) %>% 
+    left_join(df.predictions %>% 
+                  select(world, answer, all_of(model_selection)),
+              by = c("world", "answer")) %>% 
+    mutate(across(all_of(model_selection), ~ ifelse(. == 0, 0.01, .))) %>% 
+    group_by(experiment, participant) %>% 
+    summarize(across(all_of(model_selection), ~ exp(sum(log(.))))) %>% 
+    ungroup() %>% 
+    rowwise() %>% 
+    mutate(sum = sum(c_across(all_of(model_selection))),
+           across(all_of(model_selection), ~ . / sum)) %>% 
+    select(-sum)
+```
+
+## Correlation between models 
+
+```{r message=FALSE, warning=FALSE}
+df.predictions %>% 
+    select(matching, vision, both) %>% 
+    # correlate(method = "spearman") %>% 
+    correlate() %>% 
+    shave() %>% 
+    fashion()
+```
+
+## Accuracy as a function of age 
+
+```{r}
+df.choices %>% 
+    mutate(age = as.character(age)) %>% 
+    group_by(age) %>% 
+    summarize(pct_correct = sum(correct)/n()) %>% 
+    bind_rows(df.adults %>% 
+                  filter(experiment == "vision_sound") %>% 
+                  mutate(correct = answer == ground_truth) %>% 
+                  summarize(pct_correct = sum(correct)/n()) %>% 
+                  mutate(age = "adult",
+                         .before = pct_correct)) %>% 
+    print_table()
+```
+
+## Multinomial regression 
+
+- tests whether the distribution of answers changes with age 
+- Note: this analysis doesn't make too much sense as one wouldn't expect that 1, 2, or 3 answers in general change with age ... 
+
+```{r}
+df.stat = df.choices %>% 
+    select(participant, age, trial, answer) %>% 
+    mutate(answer = as.factor(answer))
+
+fit.age_answer = brm(formula = answer ~ 1 + age + (1 | participant),
+    data = df.stat,
+    family = categorical(),
+    seed = 1,
+    file = "cache/fit.age_answer")
+```
+
+## Logistic regression 
+
+- tests whether the probability of being correct changes with age 
+
+```{r}
+df.stat = df.choices %>% 
+    select(participant, age, trial, correct)
+
+fit.age_correct = brm(formula = correct ~ 1 + age + (1 | participant),
+    data = df.stat,
+    family = "bernoulli",
+    seed = 1,
+    file = "cache/fit.age_correct")
+```
+
+
+
+# PLOTS 
+
+## Participant age 
+
+```{r fig.height=4, fig.width=6, echo=FALSE}
+ggplot(data = df.data %>% 
+         mutate(age = as.factor(age)),
+       mapping = aes(x = age, 
+                     fill= age)) + 
+  geom_bar(stat = "count",
+           color = "black") +
+  geom_text(mapping = aes(label = stat(count)),
+            stat = "count",
+            nudge_y = 0.5,
+            size = 5) +
+    labs(x = "years", 
+       y = "number") +
+  scale_fill_brewer(palette = "Greens") +
+  theme(legend.position = "none")
+
+ggsave(filename = "../../figures/plots/age_distribution.pdf",
+       width = 8,
+       height = 6)
+```
+
+## Participant gender
+
+```{r fig.height=4, fig.width=6, echo=FALSE}
+ggplot(data = df.data, 
+       mapping = aes(x = gender,
+                     fill = gender)) +
+    geom_bar() +
+    geom_text(aes(label = stat(count)),
+              stat = 'count',
+              nudge_y = 0.5,
+              size = 5) +
+    labs(y = "Number") +
+    scale_fill_brewer(palette = "Set1") +
+    theme(legend.position = "none") 
+```
+
+## Answers per world 
+
+### Function to create plot with images 
+
+```{r, echo=FALSE}
+func_plot_with_images = function(data, model){
+  
+  df.plot = data %>% 
+    mutate(answer = factor(answer, levels = 1:3)) %>% 
+    count(world, ground_truth, answer, .drop = F) %>% 
+    group_by(world) %>% 
+    mutate(p = n / sum(n)) %>% 
+    mutate(correct = ground_truth == answer) %>% 
+    ungroup()
+  
+  df.plot.model = model %>% 
+    select(world, answer, vision, both) %>% 
+    pivot_longer(cols = c(vision, both),
+                 names_to = "model",
+                 values_to = "prediction") %>% 
+    filter(model %in% c("vision", "both"))
+  
+  func_load_image = function(world){
+    readPNG(str_c("../../stimuli/images/all_trials/png/trial_", world, ".png"))
+  }
+  
+  # linking images and worlds
+  df.images = df.plot %>%
+    distinct(world) %>%
+    arrange(world) %>%
+    mutate(grob = map(.x = world,
+                      .f = ~ func_load_image(world = .x)))
+  
+  # plotting
+  p = ggplot(data = df.plot,
+             mapping = aes(x = answer,
+                           y = p)) +
+    geom_col(mapping = aes(fill = answer,
+                           size = correct),
+             alpha = 0.75,
+             color = "black",
+             show.legend = F) +
+    geom_point(data = df.plot.model,
+               mapping = aes(x = answer,
+                             y = prediction,
+                             shape = model,
+                             group = model),
+               position = position_dodge(width = 0.5),
+               size = 3) +
+    geom_hline(yintercept = 1/3,
+               linetype = 2) + 
+    geom_custom(data = df.images,
+                mapping = aes(data = grob,
+                              x = -Inf,
+                              y = Inf),
+                grob_fun = function(x) rasterGrob(x,
+                                                  interpolate = T,
+                                                  vjust = -0.05,
+                                                  hjust = 0)) +
+    facet_wrap(~ world, 
+               nrow = 1) +
+    labs(y = "proportion %") + 
+    scale_size_manual(values = c(0.5, 1.5)) + 
+    scale_y_continuous(breaks = seq(0, 1, 0.25),
+                       labels = seq(0, 100, 25),
+                       limits = c(0, 1),
+                       expand = expansion(add = c(0, 0))) +
+    # scale_x_continuous(breaks = 1:3,
+    #                    labels = 1:3,
+    #                    limits = c(0, 4)) + 
+    coord_cartesian(clip = "off") +
+    theme(panel.grid.major.y = element_line(),
+          axis.text.y = element_text(size = 25),
+          axis.text.x = element_text(size = 25),
+          axis.title = element_blank(),
+          strip.background = element_blank(),
+          strip.text = element_blank(),
+          panel.background = element_rect(fill = NA, color = "black"),
+          panel.spacing.x = unit(0.5, "cm"),
+          plot.margin = margin(t = 5, l = 1, r = 0.2, b = 0, unit = "cm"))
+  return(p)
+}
+```
+
+
+### Model predictions (one row)
+
+```{r fig.height=5, fig.width=22}
+
+models = c("baseline", "matching", "vision", "both")
+models = c("baseline", "matching", "adult_vision", "adult_vision_sound")
+
+df.plot = df.predictions %>% 
+    select(world, answer, all_of(models)) %>% 
+    pivot_longer(cols = -c(world, answer),
+                 names_to = "model",
+                 values_to = "prediction") %>% 
+    filter(model %in% models) %>% 
+    mutate(model = factor(model,
+                          levels = models,
+                          # labels = c("guessing", "matching", "vision", "vision & sound")))
+                          labels = c("guessing", "matching",
+                                     "simulation (vision)","simulation (vision & sound)")))
+
+func_load_image = function(world){
+    readPNG(str_c("../../figures/ground_truth/trial_", world, ".png"))
+}
+
+# linking images and worlds
+df.images = df.plot %>%
+    distinct(world) %>%
+    arrange(world) %>%
+    mutate(grob = map(.x = world,
+                      .f = ~ func_load_image(world = .x)))
+
+df.text = df.plot %>% 
+    distinct(world) %>% 
+    arrange(world) %>% 
+    mutate(index = 1:n(),
+           x = 0.8,
+           y = Inf)
+  
+# plotting
+p = ggplot(data = df.plot,
+           mapping = aes(x = answer,
+                         y = prediction)) +
+    geom_col(mapping = aes(fill = model,
+                           group = model),
+             position = position_dodge(width = 0.9),
+             color = "black") +
+    geom_hline(yintercept = 1/3,
+               linetype = 2) + 
+    geom_custom(data = df.images,
+                mapping = aes(data = grob,
+                              x = -Inf,
+                              y = Inf),
+                grob_fun = function(x) rasterGrob(x,
+                                                  interpolate = T,
+                                                  vjust = -0.05,
+                                                  hjust = 0)) +
+    geom_text(data = df.text,
+              mapping = aes(x = x,
+                            y = y,
+                            label = index),
+              size = 12,
+              color = "white",
+              vjust = -4) + 
+    facet_wrap(~ world, 
+               nrow = 1) +
+    labs(y = "proportion %") + 
+    scale_size_manual(values = c(0.5, 1.5)) + 
+    scale_y_continuous(breaks = seq(0, 1, 0.25),
+                       labels = str_c(seq(0, 100, 25), "%"),
+                       limits = c(0, 1),
+                       expand = expansion(add = c(0, 0))) +
+    coord_cartesian(clip = "off") +
+    scale_fill_brewer(palette = "Set1") + 
+    theme(panel.grid.major.y = element_line(),
+          axis.text.y = element_text(size = 25),
+          axis.text.x = element_text(size = 25),
+          axis.title = element_blank(),
+          legend.position = "bottom",
+          strip.background = element_blank(),
+          strip.text = element_blank(),
+          panel.background = element_rect(fill = NA, color = "black"),
+          panel.spacing.x = unit(0.5, "cm"),
+          plot.margin = margin(t = 5, l = 1, r = 0.2, b = 0, unit = "cm"))
+p
+
+ggsave(filename = "../../figures/plots/model_predictions_adults.pdf",
+# ggsave(filename = "../../figures/plots/model_predictions_models.pdf",
+       width = 22,
+       height = 5)
+```
+
+### Model predictions (3x3)
+
+```{r fig.height=18, fig.width=10}
+df.plot = df.predictions %>% 
+    select(world, answer, baseline, matching, vision, both) %>% 
+    pivot_longer(cols = c(baseline, matching, vision, both),
+                 names_to = "model",
+                 values_to = "prediction") %>% 
+    filter(model %in% c("baseline", "matching", "vision", "both")) %>% 
+    mutate(model = factor(model,
+                          levels = c("baseline", "matching", "vision", "both"),
+                          labels = c("baseline", "matching", "vision", "vision & sound")))
+
+func_load_image = function(world){
+    readPNG(str_c("../../figures/ground_truth/trial_", world, ".png"))
+}
+
+# linking images and worlds
+df.images = df.plot %>%
+    distinct(world) %>%
+    arrange(world) %>%
+    mutate(grob = map(.x = world,
+                      .f = ~ func_load_image(world = .x)))
+  
+  # plotting
+p = ggplot(data = df.plot,
+           mapping = aes(x = answer,
+                         y = prediction)) +
+    geom_col(mapping = aes(fill = model,
+                           group = model),
+             position = position_dodge(width = 0.9),
+             color = "black") +
+    geom_hline(yintercept = 1/3,
+               linetype = 2) + 
+    geom_custom(data = df.images,
+                mapping = aes(data = grob,
+                              x = -Inf,
+                              y = Inf),
+                grob_fun = function(x) rasterGrob(x,
+                                                  interpolate = T,
+                                                  vjust = -0.05,
+                                                  hjust = 0)) +
+    facet_wrap(~ world, 
+               nrow = 3) +
+    labs(y = "proportion %") + 
+    scale_size_manual(values = c(0.5, 1.5)) + 
+    scale_y_continuous(breaks = seq(0, 1, 0.25),
+                       labels = str_c(seq(0, 100, 25), "%"),
+                       limits = c(0, 1),
+                       expand = expansion(add = c(0, 0))) +
+    coord_cartesian(clip = "off") +
+    scale_fill_brewer(palette = "Set1") + 
+    theme(panel.grid.major.y = element_line(),
+          axis.text.y = element_text(size = 25),
+          axis.text.x = element_text(size = 25),
+          axis.title = element_blank(),
+          legend.position = "bottom",
+          strip.background = element_blank(),
+          strip.text = element_blank(),
+          panel.background = element_rect(fill = NA, color = "black"),
+          panel.spacing.x = unit(0.5, "cm"),
+          panel.spacing.y = unit(6.5, "cm"),
+          plot.margin = margin(t = 6.5, l = 1, r = 0.2, b = 0, unit = "cm"))
+p
+
+ggsave(filename = "../../figures/plots/model_predictions_3by3.pdf",
+       width = 10,
+       height = 18)
+```
+
+
+### Children
+
+#### Overall
+
+```{r fig.height=5, fig.width=20, echo=FALSE}
+func_plot_with_images(data = df.choices,
+                      model = df.predictions)
+```
+
+#### Separated by age 
+
+```{r fig.height=25, fig.width=20}
+# p1 = func_plot_with_images(data = df.choices %>% 
+#                              filter(age == 3),
+#                            model = df.predictions)
+
+p1 = func_plot_with_images(data = df.choices %>% 
+                             filter(age == 3),
+                           model = df.predictions)
+
+p2 = func_plot_with_images(data = df.choices %>% 
+                             filter(age == 4),
+                           model = df.predictions)
+
+p3 = func_plot_with_images(data = df.choices %>% 
+                             filter(age == 5),
+                           model = df.predictions)
+
+p4 = func_plot_with_images(data = df.choices %>% 
+                             filter(age == 6),
+                           model = df.predictions)
+
+p5 = func_plot_with_images(data = df.choices %>% 
+                             filter(age == 7),
+                           model = df.predictions)
+
+p6 = func_plot_with_images(data = df.choices %>% 
+                             filter(age == 8),
+                           model = df.predictions)
+p1 + p2 + p3 + p4 + p5 + p6 + 
+  plot_layout(ncol = 1,
+              tag_level = "new") + 
+  plot_annotation(tag_levels = "A")
+```
+
+
+
+### Adults (Vision only)
+
+```{r fig.height=5, fig.width=20, echo=FALSE}
+func_plot_with_images(data = df.adults %>% 
+                        filter(experiment == "vision"),
+                      model = df.predictions)
+```
+
+### Adults (Vision & Sound)
+
+```{r fig.height=5, fig.width=20, echo=FALSE}
+func_plot_with_images(data = df.adults %>% 
+                        filter(experiment == "vision_sound"),
+                      model = df.predictions)
+```
+
+## Accuracy with age 
+
+```{r fig.height=4, fig.width=7}
+set.seed(1)
+
+df.plot = df.choices %>% 
+    # mutate(age = str_c(age, "yo")) %>% 
+    mutate(age = as.character(age)) %>% 
+    group_by(participant, age) %>% 
+    summarize(pct_correct = sum(correct)/n()) %>% 
+    bind_rows(df.adults %>% 
+                  filter(experiment == "vision_sound") %>% 
+                  mutate(correct = answer == ground_truth,
+                         age = "adult") %>% 
+                  group_by(participant, age) %>% 
+                  summarize(pct_correct = sum(correct)/n())) %>% 
+    ungroup() %>% 
+    mutate(age = as.factor(age))
+
+df.text = df.plot %>%
+    distinct(age, participant) %>%
+    count(age) %>%
+    mutate(label = n,
+           label = ifelse(age == 3, str_c("n = ", n), n),
+           y = 0.95)
+
+ggplot(data = df.plot,
+       mapping = aes(x = age,
+                     y = pct_correct)) + 
+    geom_hline(yintercept = seq(0, 1, 0.1),
+               linetype = 1,
+               alpha = 0.1) + 
+    geom_hline(yintercept = 1/3,
+               linetype = 2,
+               color = "gray50") + 
+    stat_summary(fun.data = "mean_cl_boot",
+                 size = 1) +
+    geom_text(data = df.text,
+              mapping = aes(x = age,
+                            y = y,
+                            label = label),
+              size = 6,
+              color = "gray20") +
+    labs(x = "age group",
+         y = "% correct") +
+    coord_cartesian(ylim = c(0, 1)) + 
+    scale_y_continuous(breaks = seq(0, 1, 0.2),
+                       labels = str_c(seq(0, 1, 0.2) * 100, "%"),
+                       expand = expansion(add = c(0, 0.05)))
+    
+ggsave(filename = "../../figures/plots/points_accuracy.pdf",
+       width = 7,
+       height = 4)
+```
+
+
+
+## Model fits 
+
+### Children
+
+#### Per participant 
+
+```{r fig.height=5, fig.width=10, echo=FALSE}
+# model_selection = c("baseline", "matching", "vision", "both")
+model_selection = c("baseline", "matching", "vision", "both")
+
+df.plot = df.fits %>% 
+    group_by(age) %>% 
+    # arrange(age,
+    #         desc(baseline),
+    #         matching,
+    #         adult_vision,
+    #         adult_vision_sound) %>% 
+    arrange(age,
+            desc(baseline),
+            matching,
+            vision,
+            both) %>%
+    ungroup() %>% 
+    mutate(participant_index = 1:n()) %>%
+    pivot_longer(cols = -c(age, participant, participant_index)) %>% 
+    mutate(participant_index = as.factor(participant_index),
+           age = str_c(age, " years"),
+           name = factor(name,
+                       levels = model_selection,
+                       labels = c("guessing", "matching",
+                                  "simulation (vision)","simulation (vision & sound)")))
+
+ggplot(data = df.plot,
+       mapping = aes(x = participant_index,
+                     y = value,
+                     # fill = fct_rev(name))) + 
+                     fill = name)) + 
+    geom_bar(stat = "identity",
+             color = "black",
+             position = position_stack(reverse = TRUE)) + 
+    facet_wrap(~ age,
+               scales = "free_x") + 
+    scale_fill_brewer(palette = "Set1") + 
+    scale_y_continuous(breaks = seq(0, 1, 0.25),
+                       labels = str_c(seq(0, 100, 25), "%"),
+                       expand = expansion(add = c(0, 0.01))) + 
+    labs(y = "posterior over models",
+         fill = "model") + 
+    theme(axis.text.x = element_text(size = 10),
+          axis.text.y = element_text(size = 14),
+          axis.title.x = element_blank(),
+          legend.position = "bottom",
+          legend.text = element_text(size = 16)
+          # axis.text.x = element_blank() 
+          ) #+ 
+    # guides(fill = guide_legend(reverse=TRUE))
+
+# ggsave(filename = "../../figures/plots/bars_individual_children.pdf",
+ggsave(filename = "../../figures/plots/bars_individual_model.pdf",
+       width = 12,
+       height = 6)
+```
+
+#### Per age group
+
+```{r fig.height=4, fig.width=10, echo=FALSE}
+model_selection = c("baseline", "matching",
+                    "vision","both")
+
+df.plot = df.fits %>% 
+  group_by(age) %>% 
+  summarize(across(all_of(model_selection), ~ mean(.))) %>% 
+  ungroup() %>% 
+  pivot_longer(cols = -age) %>% 
+  mutate(age = str_c(age, " years"),
+         name = factor(name,
+                       levels = model_selection,
+                       labels = c("guessing", "matching",
+                                  "vision","vision & sound")))
+df.text = df.fits %>% 
+  count(age) %>% 
+  mutate(label = str_c("n = ", n),
+         age = str_c(age, " years"),
+         value = 1.03,
+         name = NA)
+
+ggplot(data = df.plot,
+       mapping = aes(x = age,
+                     y = value,
+                     fill = name)) + 
+    geom_bar(position = position_stack(reverse = TRUE),
+             stat = "identity",
+             color = "black") + 
+    geom_text(data = df.text,
+              mapping = aes(label = label),
+              size = 6) +
+    scale_fill_brewer(palette = "Set1") + 
+    scale_y_continuous(breaks = seq(0, 1, 0.25),
+                       labels = str_c(seq(0, 100, 25), "%"),
+                       expand = expansion(add = c(0, 0.02))) + 
+    labs(y = "posterior over models",
+         fill = "model") + 
+    theme(axis.title.x = element_blank(),
+          axis.text.y = element_text(size = 16),
+          legend.text = element_text(size = 16),
+          legend.position = "bottom")
+# guides(fill = guide_legend(reverse=TRUE))
+
+# ggsave(filename = "../../figures/plots/bars_overall_children.pdf",
+# ggsave(filename = "../../figures/plots/bars_overall_model.pdf",
+#        width = 10,
+#        height = 6)
+```
+
+#### Per age group (with adults)
+
+```{r fig.height=4, fig.width=10, echo=FALSE}
+model_selection = c("baseline", "matching", "vision","both")
+
+df.data = df.fits %>% 
+    mutate(age = str_c(age, " years")) %>% 
+    bind_rows(df.fits.adults %>% 
+                  mutate(experiment = str_replace(experiment, "_", " & "),
+                         age = str_c("adult\n", experiment)) %>% 
+                  select(-experiment)) %>% 
+    mutate(age = factor(age, levels = c("3 years", "4 years", "5 years", 
+                                        "6 years", "7 years", "8 years", 
+                                        "adult\nvision", "adult\nvision & sound")))
+
+df.plot = df.data %>% 
+  group_by(age) %>% 
+  summarize(across(all_of(model_selection), ~ mean(.))) %>% 
+  ungroup() %>% 
+  pivot_longer(cols = -age) %>% 
+  mutate(name = factor(name,
+                       levels = model_selection,
+                       labels = c("guessing", "matching",
+                                  "simulation (vision)","simulation (vision & sound)")))
+
+df.text = df.data %>%
+    count(age) %>%
+    mutate(label = str_c("n = ", n),
+           value = 1.03) %>% 
+    ungroup() %>% 
+    mutate(x = c(1:6, 7.5, 8.5))
+
+df.plot = df.plot %>% 
+    mutate(x = c(rep(1:6, each = 4), rep(c(7.5, 8.5), each = 4)))
+
+ggplot(data = df.plot,
+       mapping = aes(x = x,
+                     y = value)) + 
+    geom_bar(mapping = aes(fill = name),
+             position = position_stack(reverse = TRUE),
+             stat = "identity",
+             color = "black") + 
+    geom_text(data = df.text,
+              mapping = aes(label = label),
+              size = 6) +
+    scale_fill_brewer(palette = "Set1") + 
+    scale_x_continuous(breaks = c(1:6, 7.5, 8.5),
+                       labels = levels(df.plot$age)) +
+    scale_y_continuous(breaks = seq(0, 1, 0.25),
+                       labels = str_c(seq(0, 100, 25), "%"),
+                       expand = expansion(add = c(0, 0.02))) + 
+    labs(y = "posterior over models",
+         fill = "model") + 
+    theme(axis.title.x = element_blank(),
+          axis.text.y = element_text(size = 16),
+          axis.text.x = element_text(size = 16),
+          legend.text = element_text(size = 16),
+          legend.position = "bottom")
+# guides(fill = guide_legend(reverse=TRUE))
+
+ggsave(filename = "../../figures/plots/bars_overall_children.pdf",
+# ggsave(filename = "../../figures/plots/bars_overall_model.pdf",
+       width = 12,
+       height = 6)
+```
+
+
+### Adults 
+
+#### Per participant 
+
+```{r fig.height=5, fig.width=20}
+df.plot = df.fits.adults %>% 
+  pivot_longer(cols = -c(experiment, participant)) %>% 
+  mutate(participant = as.factor(participant),
+         name = factor(name,
+                       # levels = c("baseline", "matching",
+                       #            "adult_vision","adult_vision_sound"),
+                       levels = c("baseline", "matching",
+                                  "vision","both"),
+                       labels = c("baseline", "matching",
+                                  "vision","vision & sound")))
+ggplot(data = df.plot,
+       mapping = aes(x = participant,
+                     y = value,
+                     fill = name)) + 
+  geom_bar(position = "stack",
+           stat = "identity",
+           color = "black") + 
+  facet_wrap(~ experiment,
+             scales = "free_x") + 
+  scale_fill_brewer(palette = "Set1") + 
+  labs(y = "% of each model") + 
+  theme(axis.text.y = element_blank(),
+        axis.text.x = element_text(size = 10))
+```
+
+#### Per experiment 
+
+```{r}
+df.plot = df.fits.adults %>% 
+  group_by(experiment) %>% 
+  summarize(across(all_of(model_selection), ~ mean(.))) %>% 
+  ungroup() %>% 
+  pivot_longer(cols = -experiment) %>% 
+  mutate(name = factor(name,
+                       # levels = c("baseline", "matching",
+                       #            "adult_vision","adult_vision_sound"),
+                       levels = c("baseline", "matching",
+                                  "vision","both"),
+                       labels = c("baseline", "matching",
+                                  "vision","vision & sound")))
+ggplot(data = df.plot,
+       mapping = aes(x = experiment,
+                     y = value,
+                     fill = name)) + 
+  geom_bar(position = "stack",
+           stat = "identity",
+           color = "black") + 
+  scale_fill_brewer(palette = "Set1") + 
+  labs(y = "% of each model") + 
+  theme(axis.text.y = element_blank(),
+        axis.title.x = element_blank())
+```
+
+
+## Correct responses per world 
+
+```{r echo=FALSE, fig.height=6, fig.width=12}
+df.plot = df.choices %>% 
+  mutate(response = factor(correct,
+                          levels = c(0, 1),
+                          labels = c("wrong", "correct")))
+
+ggplot(data = df.plot,
+       mapping = aes(x = reorder(world, correct),
+                     fill = response)) +
+  geom_bar(position = "stack",
+           color = "black") +
+  coord_flip(expand = F) +
+  labs(x = "world",
+       y = "number of responses") + 
+  scale_fill_brewer(palette = "Set1") + 
+  theme(legend.position = "bottom") + 
+  guides(fill = guide_legend(reverse = T))
+
+#ggsave("../../figures/plots/bars.pdf",
+       #width = 8,
+       #height = 6)
+```
+
+## Correct responses per participant
+
+```{r echo=FALSE, fig.height=8, fig.width=8}
+df.plot = df.choices %>% 
+  mutate(participant = as.factor(participant))
+
+ggplot(data = df.plot,
+       mapping = aes(x = participant, 
+                     y = correct,
+                     fill = age)) + 
+  stat_summary(fun = "mean",
+               geom = "bar",
+               show.legend = F,
+               color = "black") + 
+  geom_hline(yintercept = 1/3,
+             linetype = 2) + 
+  facet_grid(~ age,
+             scales = "free_x") + 
+  scale_y_continuous(breaks = seq(0, 1, 0.25),
+                     labels = seq(0, 100, 25),
+                     limits = c(0, 1),
+                     expand = expansion(add = c(0, 0))) +
+  theme(axis.text.x = element_blank())
+```
+
+## Proportion of correct responses over time 
+
+```{r echo=FALSE, fig.height=6, fig.width=8, message=FALSE, warning=FALSE}
+df.plot = df.choices %>% 
+  mutate(trial = as.factor(trial))
+
+ggplot(data = df.plot,
+       mapping = aes(x = trial, 
+                     y = correct)) + 
+  geom_hline(yintercept = 1/3,
+             linetype = 2) + 
+  stat_summary(fun.data = mean_cl_boot) +
+  scale_y_continuous(breaks = seq(0, 1, 0.25),
+                     labels = seq(0, 100, 25),
+                     limits = c(0, 1))
+```
+
+## Overall accuracy 
+
+
+
+# Session Info 
+
+```{r, echo=FALSE}
+sessionInfo()
+```
+
+# Scratch pad 
+
+```{r}
+df.predictions %>% 
+    select(world, baseline, matching, vision, both) %>% 
+    filter(world == 35)
+    
+```
+
+
+
+

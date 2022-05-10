@@ -5,7 +5,7 @@ This repository contains all materials for the paper "Stop, children what's that
 
 .   
 ├── code  
-│   ├── R
+│   ├── R  
 │   │   ├── cache  
 │   │   └── data  
 ├── data  

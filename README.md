@@ -31,6 +31,7 @@ Raw data files of the experiment reported in the paper.
 ## figures
 
 ### ground truth
+Stimuli images used to generate results plots.
 
 ### plots
 
@@ -38,7 +39,7 @@ Results plots as shown in the paper.
 
 ## Images
 
-Images of the stimuli presented in the experiment.
+Stimuli images used to generate results plots.
 
 (file order doesn't match path on script line 414 - check)
 

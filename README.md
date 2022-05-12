@@ -41,7 +41,7 @@ Stimuli images used to generate model prediction plots.
 
 Results plots as shown in the paper.
 
-## Stimuli
+### stimuli
 
 Stimuli images used to generate results plots.
 

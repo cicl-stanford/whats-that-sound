@@ -1,0 +1,77 @@
+﻿Test_Date,Child_ID,Age_cts,Age,Gender,Race,Condition,resp_trial1,resp_trial2,resp_trial3,resp_trial4,resp_trial5,resp_trial6,resp_trial7,resp_trial8,resp_trial9,Sound_familiarization,Practice_drops,Notes,Exclude?,Reason_for_exclusion,heard_all_sounds,described_all_sounds,beep_description,chick_description,boom_description
+6/10/21,Plinkokids_20210610_1_online_JO,4.69,4,female,White,1,blue,yellow,yellow,green,yellow,yellow,blue,blue,green,ok,ok,,no,,yes,no,na,na,na
+6/10/21,Plinkokids_20210610_2_online_JO,4.65,4,female,White,1,blue,yellow,yellow,green,blue,yellow,yellow,yellow,green,beep x2 ,ok,"8.37 she asked parent for answer, and kept looking at parent, but I told her no asking for help so I think that's fine",no,,yes,no,na,na,na
+6/10/21,Plinkokids_20210610_3_online_JO,6.4,6,male,White,1,blue,yellow,green,green,yellow,green,blue,green,yellow,ok*,3rd drop X2,*5:07 experimenter error? He said he heard beep when I asked if he heard a sound during the 'chick' sound familiarization but I didn't clarify if he heard the chick.,no,,yes,some,na,beep,na
+6/10/21,Plinkokids_20210610_4_online_JO,6.91,6,male,Black/African,1,yellow,green,green,green,yellow,green,yellow,green,green,ok,1st drop X2,"had chromebook; background noise throughout i.e. familiarization trials: 2:12, 2:43, 3:09; Actual Trials: 13:08, 13:30 etcetera",yes,environmental interference (noise); Tobi and Joseph watched study video and agreed to exclude,yes,no,na,na,na
+6/11/21,Plinkokids_20210611_1_online_JO,4.49,4,male,Asian,1,blue,yellow,yellow,green,blue,yellow,blue,blue,green,ok,1st drop X2,,no,,yes,no,na,na,na
+6/11/21,Plinkokids_20210611_2_online_JO,6.4,6,female,"Hispanic/Latinx, White",1,blue,green,yellow,green,yellow,yellow,yellow,blue,yellow,ok,ok,,no,,yes,some,beep,na,boom
+6/12/21,Plinkokids_20210612_1_online_JO,7.66,7,male,White,1,blue,yellow,blue,green,yellow,yellow,yellow,yellow,yellow,ok,ok,,no,,yes,no,na,na,na
+6/12/21,Plinkokids_20210612_2_online_JO,4.44,4,female,Asian,1,blue,yellow,yellow,green,yellow,yellow,yellow,yellow,green,ok,ok,,no,,yes,no,na,na,na
+6/12/21,Plinkokids_20210612_3_online_JO,6.28,6,female,Asian,1,yellow,yellow,yellow,yellow,blue,blue,blue,yellow,yellow,chick X2,ok,,no,,yes,some,na,na,beep
+6/12/21,Plinkokids_20210612_4_online_JO,6.32,6,male,"Hispanic/Latinx, White",1,blue,blue,yellow,blue,green,yellow,yellow,blue,green,ok,ok,,no,,yes,yes,beep,fuzzy ,knocking
+6/14/21,Plinkokids_20210614_1_online_JO,7.17,7,female,White,1,blue,yellow,yellow,green,blue,blue,green,yellow,yellow,ok,ok,,no,,yes,no,na,na,na
+6/15/21,Plinkokids_20210615_1_online_JO,4.17,4,male,White,1,blue,yellow,yellow,green,blue,yellow,blue,yellow,blue,ok,1st drop X2,,no,,yes,some,beep,nondescript,na
+6/15/21,Plinkokids_20210615_2_online_JO,8.09,8,male,White,1,blue,blue,green,blue,green,green,yellow,blue,yellow,ok,ok,,no,,yes,some,na,soft,na
+6/15/21,Plinkokids_20210615_3_online_JO,7.09,7,female,White,1,blue,yellow,yellow,green,blue,yellow,blue,yellow,green,ok,ok,,no,,yes,some,beep,chick,na
+6/16/21,Plinkokids_20210616_1_online_JO,6.5,6,female,White,1,blue,yellow,yellow,green,yellow,yellow,blue,yellow,green,ok,ok,,no,,yes,some,na,beep,na
+6/17/21,Plinkokids_20210617_1_online_JO,4.54,4,male,Asian,2,blue,yellow,yellow,blue,yellow,yellow,green,blue,blue,ok,"2nd drop x2, 3rd drop x3",,yes,failed comprehension check three or more times,yes,no,na,na,na
+6/17/21,Plinkokids_20210617_2_online_JO,6.84,6,male,"Hispanic/Latinx, White",2,blue,yellow,green,green,blue,yellow,yellow,green,blue,ok,ok,,no,,yes,some,beep,chick,na
+6/18/21,Plinkokids_20210618_1_online_JO,7.34,7,male,Hispanic/Latinx,3,yellow,yellow,yellow,yellow,green,blue,blue,yellow,blue,ok,ok,,no,,yes,some,beep,beep,na
+6/19/21,Plinkokids_20210619_1_online_JO,4.84,4,female,White,3,yellow,green,yellow,yellow,green,yellow,yellow,green,blue,ok,1st drop x3,,yes,failed comprehension check two or more times,yes,some,na,chick,knock knock
+6/20/21,Plinkokids_20210620_1_online_JO,7.01,7,male,White,3,blue,green,yellow,blue,green,yellow,blue,yellow,blue,ok,ok,,no,,yes,some,beep,chick,na
+6/21/21,Plinkokids_20210621_1_online_JO,8.85,8,male,"Asian, White",3,yellow,yellow,green,blue,green,blue,green,yellow,blue,ok,ok,,no,,yes,some,beep,chick,na
+6/21/21,Plinkokids_20210621_2_online_JO,5.43,5,male,White,3,yellow,green,blue,yellow,green,yellow,yellow,green,blue,ok,ok,had chromebook; researcher video was frozen throughout the session,yes,conditions didn’t affect this child but a different child might react differently to a frozen researcher; agreed over email,yes,some,beep,nondescript,na
+6/21/21,Plinkokids_20210621_3_online_JO,5.94,5,male,Asian,2,yellow,green,blue,yellow,yellow,blue,blue,green,yellow,ok,ok,,no,,yes,some,beep,ball falling on snow,na
+6/22/21,Plinkokids_20210622_1_online_JO,7.69,7,male,Asian,3,blue,yellow,green,blue,green,yellow,yellow,yellow,blue,ok,ok,,no,,yes,some,beep,na,na
+6/22/21,Plinkokids_20210622_2_online_JO,5.85,5,male,Asian,3,yellow,blue,blue,yellow,yellow,green,green,blue,blue,ok,3rd drop X2,,no,,yes,yes,beep,high pitched beep,tick
+6/23/21,Plinkokids_20210623_1_online_JO,4.52,4,female,Asian,3,blue,yellow,yellow,yellow,green,yellow,blue,yellow,blue,ok,ok,,no,,yes,no,na,na,na
+6/23/21,Plinkokids_20210623_2_online_JO,5.02,4,male,Black/African,3,blue,green,green,green,yellow,green,yellow,yellow,yellow,chick X2,"1st drop x3, 2nd drop x3 (failed 3), 3rd drop x2","chromebook issues: random pop up notifications (3:27, 3:40, 4:20, 6:19 etc), said he heard beep as chick first time; popups during familiarization trials and child got all of them wrong; popups all through the actual trials ",yes,failed comprehension check two or more times and technical difficulties,yes,yes,beep,beep,nondescript
+6/23/21,Plinkokids_20210623_1_online_XJ,8.47,8,male,White,3,blue,green,yellow,yellow,green,yellow,blue,yellow,yellow,chick X2,ok,,no,,yes,no,na,na,na
+6/23/21,Plinkokids_20210623_3_online_JO,5.27,5,female,Asian,2,yellow,green,yellow,yellow,blue,yellow,green,blue,blue,ok,ok,,no,,yes,no,na,na,na
+6/24/21,Plinkokids_20210624_1_online_JO,6.28,6,male,"Asian, White",2,green,yellow,blue,yellow,blue,blue,yellow,blue,yellow,ok,ok,"adorable kid, explains all the sounds",no,,yes,some,robot ball,chick,boom
+6/24/21,Plinkokids_20210624_2_online_JO,7.32,7,female,White,3,yellow,yellow,green,blue,blue,blue,green,yellow,blue,ok,ok,,no,,yes,yes,beep,walking on dry leaves,hammer hitting something
+6/24/21,Plinkokids_20210624_3_online_JO,7.03,7,male,White,2,blue,yellow,yellow,green,blue,yellow,blue,blue,blue,ok,ok,,no,,yes,no,na,na,na
+6/24/21,Plinkokids_20210624_4_online_JO,5.94,5,female,Native American,3,yellow,green,yellow,yellow,green,yellow,yellow,green,blue,ok,ok,"chromebook: had was a strong yellow hue (presumably due to having ""f.lux"" blue-light app)",yes,chromebook set up could be crate confusion so we excluded all chromebook participants,yes,some,beep,beep,na
+6/28/21,Plinkokids_20210628_1_online_JO,5.48,5,female,White,1,yellow,yellow,blue,yellow,blue,blue,blue,green,green,ok,ok,`,no,,yes,some,beep,beep,na
+6/28/21,Plinkokids_20210628_3_online_JO,8.29,8,female,White,3,yellow,yellow,blue,yellow,blue,yellow,green,yellow,blue,ok,ok,,no,,yes,yes,beep,chick,clapping sound
+6/28/21,Plinkokids_20210628_4_online_JO,8.12,8,male,White,1,blue,blue,yellow,blue,blue,yellow,yellow,blue,yellow,ok,ok,,no,,yes,yes,robot beep,knife trying to grind on a watermelon,wooden block going down a wooden stair
+6/19/21,Plinkokids_20210629_1_online_JO,4.62,4,female,Asian,2,NA,NA,NA,NA,NA,NA,NA,NA,NA,ok,ok,,yes,didnt finish - didn’t want to play with cover closed,yes,yes,beep,beep,doesn’t know
+6/30/21,Plinkokids_20210630_1_online_JO,5.37,5,male,White,1,blue,yellow,yellow,green,blue,blue,yellow,yellow,green,chick x2,ok,,no,,yes,some,beep,sand sound,na
+6/30/21,Plinkokids_20210630_2_online_JO,7.04,7,female,Asian,3,blue,yellow,yellow,blue,yellow,blue,yellow,yellow,blue,chick x2,ok,,no,,yes,some,beep,chick,na
+7/1/21,Plinkokids_20210701_1_online_JO,4.46,4,female,White,1,blue,yellow,yellow,green,yellow,yellow,yellow,yellow,green,ok,ok,,no,,yes,yes,a car,a car,a racecar
+7/6/21,Plinkokids_20210706_1_online_JO,5.72,5,female,Prefer not to answer,2,yellow,green,yellow,yellow,blue,yellow,green,blue,blue,ok,ok,,no,,yes,some,beep,na,na
+7/9/21,Plinkokids_20210709_1_online_JO,8.07,8,male,White,2,yellow,yellow,blue,yellow,blue,green,green,green,yellow,ok,ok,,no,,yes,no,na,na,na
+7/12/21,Plinkokids_20210712_1_online_JO,5.37,5,male,"Asian, White",2,green,yellow,blue,yellow,blue,green,green,green,yellow,ok,ok,,no,,yes,some,beep,ball hitting sand,na
+7/14/21,Plinkokids_20210714_1_online_JO,8.74,8,male,White,2,blue,yellow,blue,yellow,blue,blue,green,green,blue,ok,ok,,no,,yes,yes,beep,snake,boom
+7/14/21,Plinkokids_20210714_2_online_JO,8.58,8,female,White,2,blue,yellow,green,green,blue,yellow,green,blue,yellow,ok,ok,,no,,yes,some,beep,sandpaper scratch,na
+7/15/21,Plinkokids_20210715_1_online_JO,7.79,7,female,White,2,yellow,yellow,green,blue,blue,blue,blue,blue,yellow,ok,ok,,no,,yes,yes,beep,waterfall of sand,something
+7/16/21,Plinkokids_20210716_1_online_JO,8.58,8,male,Asian,2,blue,yellow,blue,yellow,blue,green,blue,green,yellow,ok,ok,,no,,yes,yes,beep,chick,boom
+7/16/21,Plinkokids_20210716_2_online_JO,8.09,8,Prefer not to answer,Prefer not to answer,2,blue,yellow,green,yellow,blue,green,yellow,yellow,blue,ok,ok,,no,,yes,some,na,crunch,na
+7/19/21,Plinkokids_20210719_2_online_JO,8.76,8,male,White,2,yellow,green,blue,green,blue,green,yellow,blue,yellow,ok,ok,sp = special population,no,,yes,some,sound when you stop recording on camera,second choice of operation on a camera,na
+7/19/21,Plinkokids_20210719_3_online_JO,6.35,6,male,"Asian, White",2,blue,green,yellow,green,blue,yellow,yellow,blue,yellow,boom x2,ok,sp = special population,no,,yes,yes,beep,chick,wood
+7/21/21,Plinkokids_20210721_1_online_JO,5.85,5,female,White,3,yellow,yellow,yellow,yellow,green,yellow,yellow,yellow,blue,ok,ok,,no,,yes,yes,rushing in the air,dropping into the box,landing on stuff
+7/21/21,Plinkokids_20210721_2_online_JO,5.88,5,female,"Hispanic/Latinx, Pacific Islander",2,yellow,green,yellow,yellow,blue,yellow,green,blue,blue,ok,ok,,no,,yes,yes,beep,chick,nondescript
+7/22/21,Plinkokids_20210722_1_online_JO,7.72,7,male,White,3,blue,blue,green,blue,green,blue,green,yellow,blue,ok,ok,,no,,yes,yes,beep,chick,chick
+7/22/21,Plinkokids_20210722_2_online_JO,6.94,6,male,Black/African,1,blue,green,yellow,green,blue,green,yellow,yellow,green,chick X3,1st drop X2,,no,,yes,no,na,na,na
+7/23/21,Plinkokids_20210723_1_online_JO,8.1,8,male,White,3,yellow,green,green,blue,green,yellow,green,yellow,blue,ok,ok,,no,,yes,some,beep,na,na
+7/26/21,Plinkokids_20210726_1_online_JO,5.36,5,female,"Hispanic/Latinx, White",2,yellow,green,yellow,yellow,blue,yellow,blue,yellow,blue,ok,ok,,no,,yes,yes,beep,nondescript,nondescript
+8/5/21,Plinkokids_20210805_1_online_JO,6.23,6,female,White,2,yellow,blue,blue,green,yellow,yellow,green,green,yellow,ok,ok,,no,,yes,yes,beep,sand,nondescript
+8/9/21,Plinkokids_20210809_1_online_JO,4.9,4,male,White,2,yellow,green,yellow,yellow,blue,yellow,green,blue,yellow,ok,ok,,no,,yes,yes,a hole,a chicken,sound when dropping inside a big box
+8/9/21,Plinkokids_20210809_2_online_JO,4.32,4,female,Asian,3,yellow,yellow,yellow,yellow,green,yellow,blue,green,blue,ok,ok,,no,,yes,yes,said she likes the first sound,said she likes the first sound again,said she likes the first sound again
+8/15/21,Plinkokids_20210815_1_online_JO,4.75,4,female,Asian,3,yellow,green,blue,yellow,green,yellow,blue,green,blue,ok,1st drop X3,,yes,failed comprehension check two or more times,yes,some,beep,nondescript,na
+8/15/21,Plinkokids_20210815_2_online_JO,4.75,4,female,"Asian, Hispanic/Latinx",3,blue,yellow,green,blue,yellow,green,blue,yellow,green,ok,ok,,no,,yes,yes,beep like a car,scratching,boom
+8/27/21,Plinkokids_20210827_1_online_JO,3.7,3,female,White,1,blue,green,yellow,green,blue,yellow,blue,blue,green,ok,ok,,no,,yes,yes,beeping,doesn’t know,beeping again
+8/27/21,Plinkokids_20210827_2_online_JO,3.7,3,male,White,2,yellow,yellow,yellow,yellow,yellow,yellow,green,yellow,yellow,ok,"1st drop X2, 2nd drop X2",,yes,failed comprehension check two or more times,yes,yes,beeping,beeping,beeping
+8/30/21,Plinkokids_20210830_1_online_JO,3.71,3,male,White,1,blue,green,blue,NA,NA,NA,NA,NA,NA,ok,2nd drop X2,,yes,opted out after 3 trials,yes,no,na,na,na
+8/30/21,Plinkokids_20210830_2_online_JO,3.46,3,female,White,2,blue,yellow,green,yellow,blue,yellow,green,yellow,blue,ok,1st drop X2,,no,,yes,yes,"nondescript or ""ball""","nondescript or ""ball""",nondescript
+8/30/21,Plinkokids_20210830_3_online_JO,3.87,3,male,White,3,yellow,green,green,green,green,green,yellow,green,yellow,ok,ok,,no,,yes,some,na,"nondescript ""dode""","nondescript ""dode"""
+9/1/21,Plinkokids_20210901_1_online_JO,3.63,3,male,Hispanic/Latinx,1,blue,green,yellow,green,green,yellow,blue,green,green,chick X2,ok,had chromebook,no,,yes,no,na,na,na
+9/2/21,Plinkokids_20210902_1_online_JO,3.72,3,female,White,2,NA,blue,blue,blue,yellow,green,blue,yellow,green,ok,1st drop X2,"said she doesn't know the first one, even after repeating then asked to move on",yes,,yes,yes,beep,beep,beep
+9/3/21,Plinkokids_20210903_1_online_JO,3.47,3,female,White,1,yellow,green,blue,yellow,green,blue,yellow,yellow,yellow,ok,ok,,no,,yes,yes,beep,nondescript,nondescript
+9/3/21,Plinkokids_20210903_2_online_JO,3.3,3,female,"Asian, Hispanic/Latinx",3,NA,NA,NA,NA,NA,NA,NA,NA,NA,ok,2nd drop X2,,yes,didn’t finish due to technical difficulties - game cut out before we finished practice drops - would be excluded anyway,yes,no,doesn’t know,doesn’t know,doesn’t know
+9/6/21,Plinkokids_20210906_1_online_JO,3.91,3,female,White,1,yellow,yellow,blue,green,blue,yellow,blue,yellow,green,ok,ok,,no,,yes,yes,beeping,beeping,hard sound
+9/6/21,Plinkokids_20210906_2_online_JO,3.73,3,female,Black/African,2,green,green,yellow,yellow,blue,yellow,green,blue,green,ok,ok,,no,,yes,some,beep,doesn’t know,doesn’t know
+9/6/21,Plinkokids_20210906_3_online_JO,3.48,3,male,"Asian, White",3,blue,yellow,green,blue,green,yellow,blue,yellow,blue,ok,ok,,no,,yes,yes,nondescript,nondescript,nondescript
+9/6/21,Plinkokids_20210906_4_online_JO,3.12,3,female,"Asian, White",1,blue,green,yellow,green,blue,blue,green,yellow,blue,ok,ok,,no,,yes,yes,beep,doesn’t know,doesn’t know
+9/7/21,Plinkokids_20210907_1_online_JO,3.56,3,female,Hispanic/Latinx,3,blue,yellow,green,yellow,yellow,green,blue,yellow,blue,ok,1st drop X2,,no,,yes,no,na,na,na
+9/9/21,Plinkokids_20210909_1_online_JO,3.9,3,female,White,2,green,yellow,blue,green,blue,yellow,green,yellow,blue,ok,ok,,no,,yes,yes,beep,chick,nondescript

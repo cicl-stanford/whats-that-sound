@@ -35,7 +35,7 @@ Diagrams used to explain model and procedure.
 
 ### ground truth
 
-Stimuli images used to generate results plots.
+Stimuli images used to generate model prediction plots.
 
 ### plots
 

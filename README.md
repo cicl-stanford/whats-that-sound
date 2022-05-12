@@ -11,11 +11,10 @@ This repository contains all materials for the paper "Stop, children what's that
 ├── data
 ├── docs
 ├── figures
+│   ├── diagrams
 │   ├── ground_truth
 │   └── plots
 └── stimuli
-    └── images
-        └── study
 ```
 
 ## code
@@ -30,7 +29,12 @@ Raw data files of the experiment reported in the paper.
 
 ## figures
 
+### diagrams
+
+Diagrams used to explain model and procedure.
+
 ### ground truth
+
 Stimuli images used to generate results plots.
 
 ### plots

@@ -11,6 +11,7 @@ This repository contains all materials for the paper "Stop, children what's that
 ├── data
 ├── docs
 ├── figures
+│   ├── diagrams
 │   ├── ground_truth
 │   └── plots
 └── stimuli

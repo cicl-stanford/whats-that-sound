@@ -15,20 +15,23 @@ output:
 ## Load libraries
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-library("readxl")     # for reading excel files 
-library("png")        # for adding images to ggplot 
-library("egg")        # for geom_custom()
-library("grid")       # functions for dealing with images 
-library("ggpubr")     # for plotting
-library("knitr")      # for knitting
-library("janitor")    # for cleaning column names 
-library("transport")  # for computing Wasserstein distance
-library("kableExtra") # for knitr tables
-library("xtable")     # for latex tables
-library("patchwork")  # for figure panels
-library("corrr")      # for correlations
-library("brms")       # for Bayesian data analysis
-library("tidyverse")  # for wrangling and plotting 
+library("readxl")      # for reading excel files 
+library("png")         # for adding images to ggplot 
+library("egg")         # for geom_custom()
+library("grid")        # functions for dealing with images 
+library("ggpubr")      # for plotting
+library("knitr")       # for knitting
+library("janitor")     # for cleaning column names 
+library("transport")   # for computing Wasserstein distance
+library("kableExtra")  # for knitr tables
+library("xtable")      # for latex tables
+library("patchwork")   # for figure panels
+library("corrr")       # for correlations
+library("broom.mixed") # for tidying up regression results
+library("emmeans")     # for regression follow ups 
+library("boot")        # for the inverse logit function
+library("tidyverse")   # for wrangling and plotting 
+library("brms")        # for Bayesian data analysis
 ```
 
 ## Set options
@@ -331,7 +334,9 @@ fit.age_answer = brm(formula = answer ~ 1 + age + (1 | participant),
     file = "cache/fit.age_answer")
 ```
 
-## Logistic regression 
+## Logistic regressions
+
+### Effect of age 
 
 - tests whether the probability of being correct changes with age 
 
@@ -344,8 +349,80 @@ fit.age_correct = brm(formula = correct ~ 1 + age + (1 | participant),
     family = "bernoulli",
     seed = 1,
     file = "cache/fit.age_correct")
+
+fit.age_correct
 ```
 
+### 7s and 8s above chance (33%)? 
+
+```{r}
+# 7 year olds
+df.stat = df.choices %>% 
+    select(participant, age, trial, correct) %>% 
+    filter(age == 7)
+
+fit.seven_correct = brm(formula = correct ~ 1 + (1 | participant),
+    data = df.stat,
+    family = "bernoulli",
+    seed = 1,
+    file = "cache/fit.seven_correct")
+
+# 8 year olds
+df.stat = df.choices %>% 
+    select(participant, age, trial, correct) %>% 
+    filter(age == 8)
+
+fit.eight_correct = brm(formula = correct ~ 1 + (1 | participant),
+    data = df.stat,
+    family = "bernoulli",
+    seed = 1,
+    file = "cache/fit.eight_correct")
+
+# results (in probability scale)
+fit.seven_correct %>% 
+    tidy() %>% 
+    filter(effect == "fixed") %>% 
+    select(estimate, contains("conf")) %>% 
+    mutate(across(.cols = everything(),
+                  .fns = ~ inv.logit(.)))
+
+fit.eight_correct %>% 
+    tidy() %>% 
+    filter(effect == "fixed") %>% 
+    select(estimate, contains("conf")) %>% 
+    mutate(across(.cols = everything(),
+                  .fns = ~ inv.logit(.)))
+```
+
+
+## Probability of different strategies for different age ranges 
+
+```{r}
+df.fits %>% 
+    ungroup() %>% 
+    filter(age < 6) %>% 
+    summarize(matching = mean(matching))
+
+df.fits %>% 
+    ungroup() %>% 
+    filter(age < 6) %>% 
+    summarize(simulation = mean(vision) + mean(both))
+
+df.fits %>% 
+    ungroup() %>% 
+    filter(age == 3) %>% 
+    summarize(guessing = mean(baseline))
+
+df.fits %>% 
+    ungroup() %>% 
+    filter(age >= 6) %>% 
+    summarize(simulation = mean(vision) + mean(both))
+
+df.fits %>% 
+    ungroup() %>% 
+    filter(age == 8) %>% 
+    summarize(simulation = mean(both))
+```
 
 
 # PLOTS 
@@ -412,7 +489,7 @@ func_plot_with_images = function(data, model){
     filter(model %in% c("vision", "both"))
   
   func_load_image = function(world){
-    readPNG(str_c("../../stimuli/images/all_trials/png/trial_", world, ".png"))
+    readPNG(str_c("../../stimuli/images/study/test/world_", world, "_final.png"))
   }
   
   # linking images and worlds
@@ -566,7 +643,7 @@ ggsave(filename = "../../figures/plots/model_predictions_adults.pdf",
 
 ### Model predictions (3x3)
 
-```{r fig.height=18, fig.width=10}
+```{r fig.height=18, fig.width=10, eval=FALSE}
 df.plot = df.predictions %>% 
     select(world, answer, baseline, matching, vision, both) %>% 
     pivot_longer(cols = c(baseline, matching, vision, both),
@@ -698,7 +775,7 @@ func_plot_with_images(data = df.adults %>%
                       model = df.predictions)
 ```
 
-## Accuracy with age 
+## Accuracy with age (discrete)
 
 ```{r fig.height=4, fig.width=7}
 set.seed(1)
@@ -753,6 +830,199 @@ ggsave(filename = "../../figures/plots/points_accuracy.pdf",
        height = 4)
 ```
 
+## Accuracy with age (continuous)
+
+```{r fig.height=4, fig.width=7}
+set.seed(1)
+
+df.plot.individual = df.choices %>% 
+    # add continuous age
+    left_join(df.data %>% 
+                  select(participant, age_cts),
+              by = "participant") %>% 
+    group_by(participant, age, age_cts) %>% 
+    summarize(pct_correct = sum(correct)/n()) %>% 
+    ungroup() %>% 
+    mutate(age = factor(age, levels = c(3:8, "adult")))
+
+df.plot.means = df.choices %>% 
+    mutate(age = as.character(age)) %>% 
+    group_by(participant, age) %>% 
+    summarize(pct_correct = sum(correct)/n()) %>% 
+    bind_rows(df.adults %>% 
+                  filter(experiment == "vision_sound") %>% 
+                  mutate(correct = answer == ground_truth,
+                         age = "adult") %>% 
+                  group_by(participant, age) %>% 
+                  summarize(pct_correct = sum(correct)/n())) %>% 
+    group_by(age) %>% 
+    summarize(response = Hmisc::smean.cl.boot(pct_correct),
+              n = n()) %>% 
+    mutate(index = c("mean", "low", "high")) %>% 
+    ungroup() %>% 
+    pivot_wider(names_from = index,
+                values_from = response) %>% 
+    left_join(df.choices %>% 
+                  left_join(df.data %>% 
+                                select(participant, age_cts),
+                            by = "participant") %>% 
+                  distinct(participant, age, age_cts) %>% 
+                  group_by(age) %>% 
+                  summarize(age_mean = mean(age_cts)) %>% 
+                  mutate(age = as.character(age)),
+              by = "age") %>% 
+    mutate(age_mean = ifelse(age == "adult", 10, age_mean),
+           age = factor(age, levels = c(3:8, "adult")))
+
+df.text = df.plot.means %>% 
+    select(age, age_mean, n) %>% 
+    mutate(label = n,
+           label = ifelse(age == "3", str_c("n = ", n), n),
+           y = 0.95)
+
+ggplot() + 
+    geom_hline(yintercept = seq(0, 1, 0.1),
+               linetype = 1,
+               alpha = 0.1) + 
+    geom_hline(yintercept = 1/3,
+               linetype = 2,
+               color = "gray50") + 
+    geom_point(data = df.plot.individual,
+               mapping = aes(x = age_cts,
+                             y = pct_correct,
+                             color = age),
+               show.legend = F,
+               size = 1) +
+    geom_pointrange(data = df.plot.means,
+                    mapping = aes(x = age_mean,
+                                  y = mean,
+                                  ymin = low,
+                                  ymax = high,
+                                  fill = age),
+                    shape = 21,
+                    size = 1,
+                    show.legend = F) +
+    geom_text(data = df.text,
+              mapping = aes(x = age_mean,
+                            y = y,
+                            label = label),
+              size = 6,
+              color = "gray20") +
+    labs(x = "age (in years)",
+         y = "% correct") +
+    coord_cartesian(ylim = c(0, 1)) + 
+    scale_x_continuous(breaks = c(seq(3, 9, 1), 10),
+                       labels = c(seq(3, 9, 1), "adults"),
+                       expand = expansion(add = c(0.2, 0.5))) + 
+    scale_y_continuous(breaks = seq(0, 1, 0.2),
+                       labels = str_c(seq(0, 1, 0.2) * 100, "%"),
+                       expand = expansion(add = c(0, 0.05))) + 
+    scale_fill_brewer(type = "qual", palette = 2) +
+    scale_color_brewer(type = "qual", palette = 2)
+    
+ggsave(filename = "../../figures/plots/points_accuracy_continuous.pdf",
+       width = 7,
+       height = 4)
+```
+## Accuracy with age (continuous)
+
+```{r fig.height=4, fig.width=7}
+set.seed(1)
+
+df.plot.individual = df.choices %>% 
+    # add continuous age
+    left_join(df.data %>% 
+                  select(participant, age_cts),
+              by = "participant") %>% 
+    group_by(participant, age, age_cts) %>% 
+    summarize(pct_correct = sum(correct)/n()) %>% 
+    ungroup() %>% 
+    mutate(age = factor(age, levels = c(3:8,
+                                        "adult\nvision",
+                                        "adult\nvision & sound")))
+
+df.plot.means = df.choices %>% 
+    mutate(age = as.character(age)) %>% 
+    group_by(participant, age) %>% 
+    summarize(pct_correct = sum(correct)/n()) %>% 
+    bind_rows(df.adults %>% 
+                  mutate(correct = answer == ground_truth,
+                         age = "adult") %>% 
+                  group_by(participant, experiment, age) %>% 
+                  summarize(pct_correct = sum(correct)/n()) %>% 
+                  mutate(age = str_c(age,"\n", experiment),
+                         age = str_replace(age, "_", " & "))) %>% 
+    group_by(age) %>% 
+    summarize(response = Hmisc::smean.cl.boot(pct_correct),
+              n = n()) %>% 
+    mutate(index = c("mean", "low", "high")) %>% 
+    ungroup() %>% 
+    pivot_wider(names_from = index,
+                values_from = response) %>% 
+    left_join(df.choices %>% 
+                  left_join(df.data %>% 
+                                select(participant, age_cts),
+                            by = "participant") %>% 
+                  distinct(participant, age, age_cts) %>% 
+                  group_by(age) %>% 
+                  summarize(age_mean = mean(age_cts)) %>% 
+                  mutate(age = as.character(age)),
+              by = "age") %>% 
+    mutate(age_mean = ifelse(age == "adult\nvision", 10, age_mean),
+           age_mean = ifelse(age == "adult\nvision & sound", 11, age_mean),
+           age = factor(age, levels = c(3:8, "adult\nvision", "adult\nvision & sound")))
+
+df.text = df.plot.means %>% 
+    select(age, age_mean, n) %>% 
+    mutate(label = n,
+           label = ifelse(age == "3", str_c("n = ", n), n),
+           y = 0.95)
+
+ggplot() + 
+    geom_hline(yintercept = seq(0, 1, 0.1),
+               linetype = 1,
+               alpha = 0.1) + 
+    geom_hline(yintercept = 1/3,
+               linetype = 2,
+               color = "gray50") + 
+    geom_point(data = df.plot.individual,
+               mapping = aes(x = age_cts,
+                             y = pct_correct,
+                             color = age),
+               show.legend = F,
+               size = 1) +
+    geom_pointrange(data = df.plot.means,
+                    mapping = aes(x = age_mean,
+                                  y = mean,
+                                  ymin = low,
+                                  ymax = high,
+                                  fill = age),
+                    shape = 21,
+                    size = 1,
+                    show.legend = F) +
+    geom_text(data = df.text,
+              mapping = aes(x = age_mean,
+                            y = y,
+                            label = label),
+              size = 6,
+              color = "gray20") +
+    labs(x = "age (in years)",
+         y = "% correct") +
+    coord_cartesian(ylim = c(0, 1)) + 
+    scale_x_continuous(breaks = c(seq(3, 9, 1), 10:11),
+                       labels = c(seq(3, 9, 1), "adult\nvision", "adult\nvision & sound"),
+                       expand = expansion(add = c(0.2, 1))) + 
+    scale_y_continuous(breaks = seq(0, 1, 0.2),
+                       labels = str_c(seq(0, 1, 0.2) * 100, "%"),
+                       expand = expansion(add = c(0, 0.05))) + 
+    scale_fill_brewer(type = "qual", palette = 2) +
+    scale_color_brewer(type = "qual", palette = 2) + 
+    theme(axis.text.x = element_text(size = 14))
+    
+ggsave(filename = "../../figures/plots/points_accuracy_continuous.pdf",
+       width = 10,
+       height = 4)
+```
 
 
 ## Model fits 

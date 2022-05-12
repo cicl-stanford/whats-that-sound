@@ -31,7 +31,12 @@ Raw data files of the experiment reported in the paper.
 
 ## figures
 
+### diagrams
+
+Diagrams used to explain model and procedure.
+
 ### ground truth
+
 Stimuli images used to generate results plots.
 
 ### plots

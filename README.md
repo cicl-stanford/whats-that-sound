@@ -37,12 +37,9 @@ Stimuli images used to generate results plots.
 
 Results plots as shown in the paper.
 
-## Images
+## Stimuli
 
 Stimuli images used to generate results plots.
-
-(NB: file order on images/ here doesn't match path used on analysis script line 414 - check)
-
 
 
 

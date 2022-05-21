@@ -14,11 +14,12 @@ This repository contains all materials for the paper "Stop, children what's that
 │       └── data
 ├── data
 ├── docs
-└── figures
-    ├── diagrams
-    ├── ground_truth
-    ├── plots
-    └── stimuli
+├── figures
+│   ├── diagrams
+│   ├── ground_truth
+│   ├── plots
+│   └── stimuli_images
+└── stimuli
 ```
 
 ## code
@@ -45,6 +46,10 @@ Stimuli images used to generate model prediction plots.
 
 Results plots as shown in the paper.
 
-### stimuli
+### stimuli_images
 
 Stimuli images used to generate results plots.
+
+## figures
+
+Stimuli slides and script used to run the experiment.

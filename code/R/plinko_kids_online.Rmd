@@ -402,7 +402,7 @@ func_plot_with_images = function(data, model){
     filter(model %in% c("vision", "both"))
   
   func_load_image = function(world){
-    readPNG(str_c("../../figures/stimuli/world_", world, "_final.png"))
+    readPNG(str_c("../../figures/stimuli_images/world_", world, "_final.png"))
   }
   
   # linking images and worlds

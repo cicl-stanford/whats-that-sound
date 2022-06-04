@@ -50,6 +50,6 @@ Results plots as shown in the paper.
 
 Stimuli images used to generate results plots.
 
-## figures
+## stimuli
 
 Stimuli slides and script used to run the experiment.
